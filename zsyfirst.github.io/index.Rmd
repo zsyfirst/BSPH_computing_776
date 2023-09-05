@@ -1,0 +1,15 @@
+---
+title: "Siyu Zou"
+image: "Siyu.jpg"
+links:
+  - label: ResearchGate
+    url: "https://www.researchgate.net/profile/Siyu-Zou"
+  - label: GitHub
+    url: "https://github.com/zsyfirst/zsyfirst.github.io"
+  - label: Email
+    url: "mailto:szou14@jh.edu"
+output:
+  postcards::jolla
+---
+ 
+I am a MHS student in Epidemiology living in the 929 Apartment. I come from China, and just arrived in Baltimore for 2 weeks. I love hiking, eating spicy food. I am interested in the prevention of stroke and cognitive decline, which might result from poorly controlled CVD risk factors. I hope after my two years study life in John Hopkins, I could have good grasp of statistics and teamwork. 
