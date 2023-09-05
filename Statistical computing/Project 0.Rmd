@@ -9,21 +9,28 @@ output: html_document
 install.packages( c("postcards", "usethis", "gitcreds") )
 
 library(usethis)
-use_git_config(user.name = "Jane Doe", user.email = "jane@example.org")
+use_git_config(user.name = "Siyu Zou", user.email = "zsy861909940@gmail.com")
 ```
 
-
-
+# Name: Siyu Zou
+# JHED ID: szou14
+# Windows
 ```{r cars}
-summary(cars)
+print(R.version.string)
+print(RStudio.Version()$version)
 ```
 
-## Including Plots
+## Github username: zsyfirst
 
-You can also embed plots, for example:
+## git version 2.42.0.windows.2
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r github project}
+
+## My GitHub username is "zsyfirst", so this would create the RStudio project
+## on my Desktop
+usethis::create_project("D:/JHU/term 1/statistical computing/zsyfirst.github.io")
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
