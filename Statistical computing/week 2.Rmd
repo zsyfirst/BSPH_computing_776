@@ -1,0 +1,82 @@
+---
+title: "week 2"
+author: "Siyu Zou"
+date: "2023-09-05"
+output: html_document
+---
+
+```{r literature, include=FALSE}
+citation("rmarkdown")
+citation("tidyverse") 
+```
+
+```{r week 2 reading and writing data}
+getwd()
+# setwd()
+
+install.packages('here')
+library(here)
+library(sessioninfo)
+# install.packages("palmerpenguins")
+library("palmerpenguins")
+```
+
+```{r finding files locally}
+here::here()
+list.files(here::here())
+# here makes the sharing code more easily, you don't need to change your dictionary
+
+# file.exists(here("my", "relative", "path")): logical test if the file exists
+# dir.create(here("my", "relative", "path")): create a folder
+# list.files(here("my", "relative", "path")): list contents of folder
+# file.create(here("my", "relative", "path")): create a file
+# file.remove(here("my", "relative", "path")): delete a file
+```
+
+```{r txt or csv}
+# base R
+# read.csv() or read.table()
+# write.table() or writeLines()
+# df <- read.csv(here("data", "team_standings.csv"))
+
+# reading data files with read.table()
+
+library(readr) # read_table() and read_csv()
+# teams <- read_csv(here("data", "team_standings.csv")) 
+# read_* tries to guess the class of every column, and much faster than base R (read.*)
+
+```
+
+```{r source}
+# read function from other R script file into R
+source(here::here("functions.R"))  
+# you don't need to open the file and read those functions 
+# cons: make the code shorter
+```
+
+```{r saving}
+# .RData: Stores multiple R objects
+# .Rda: This is short for .RData and is equivalent.
+# .Rds: Stores a single R object
+
+a <- september
+b <- tuesday
+save(a,b, file = here(".RData"))
+saveRDS(a,file = here("a.Rds"))
+
+load(here("a.Rds"))
+```
+
+```{r tidyverse}
+library(tidyverse)
+# tibble is a nice way to show data than data.frame, more informative
+
+
+```
+
+
+```{r end}
+session_info()
+
+```
+
