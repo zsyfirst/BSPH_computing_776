@@ -71,9 +71,290 @@ load(here("a.Rds"))
 library(tidyverse)
 # tibble is a nice way to show data than data.frame, more informative
 
+chicago <- readRDS(here("data", "chicago.rds"))  # this is a data.frame
+
+dim(chicago)  
+
+str(chicago)  # data structure 
+
+#  convert this data.frame to a tibble you would use the following:
+str(as_tibble(chicago))
+
+# create a tibble
+tibble(
+    a = 1:5,
+    b = 6:10,
+    c = 1,
+    z = (a + b)^2 + c
+)
+
+# Tibbles can have column names that are not allowed in data.frame
+tibble(
+    `two words` = 1:5,
+    `12` = "numeric",
+    `:)` = "smile",
+)
+
+```
+[[ can subset by name or position
+$ only subsets by name
+```{r seusetting}
+df <- tibble(
+    a = 1:5,
+    b = 6:10,
+    c = 1,
+    z = (a + b)^2 + c
+)
+
+# Extract by name using $ or [[]]
+df$z
+df[["z"]]
+# Extract by position requires [[]]
+df[[4]]
+
+```
+# Dplyr
+mutate(): add new variables/columns or transform existing variables
+select(): return a subset of the columns of a data frame, using a flexible notation
+filter(): extract a subset of rows from a data frame based on logical conditions
+summarise() / summarize(): generate summary statistics of different variables in the data frame, possibly within strata
+## %>%: the “pipe” operator is used to connect multiple verb actions together into a pipeline
+
+```{r dplyr}
+library(dplyr)
+
+chicago <- as_tibble(chicago) # dataset
+str(chicago)
+```
+
+# select
+```{r select}
+# subset
+chicage %>%
+  select(city:dptp)
+# keep every variable that ends with"2"
+subset <- select(chicago, ends_with("2"))
+str(subset)
+```
+
+# filter
+```{r filter}
+chicago_filter <- chicago %>%
+  filter(pm25tmean2 > 30)
+
+summary(chicago_filter$pm25tmean2)
+```
+
+# logical operations
+%in%	(Included in) 
+example: 	city %in% c("chic", "bmore")
+
+is.na()	Is a missing value	
+example: is.na(pm10tmean2)
+
+# arrange
+ reorder rows of a data frame according to one of the variables/columns.
+```{r arrange}
+chicago <- arrange(chicago, date)
+
+# descending order 
+chicago <- arrange(chicago, desc(date))
+```
+
+# Renaming a variable
+```{r rename}
+chicago <- rename(chicago, dewpoint = dptp, pm25 = pm25tmean2)
+head(chicago[, 1:5], 3)
+```
+
+# mutate
+create new variables drives from existing variables
+```{r mutate}
+chicago <- mutate(chicago, pm25detrend = pm25 - mean(pm25, na.rm = TRUE))
+head(chicago)
+
+# transmute() function, which does the same thing as mutate() but then drops all non-transformed variables.
+head(transmute(chicago,
+    pm10detrend = pm10tmean2 - mean(pm10tmean2, na.rm = TRUE),
+    o3detrend = o3tmean2 - mean(o3tmean2, na.rm = TRUE)  # ignore the missing 
+))
+# Note that there are only two columns in the transmuted data frame.
+```
+
+# group_by
+generate summary statistics from the data frame within strata defined by a variable
+1. Splitting a data frame into separate pieces defined by a variable or group of variables (group_by())
+2. Then, applying a summary function across those subsets (summarize())
+```{r group_by}
+chicago <- mutate(chicago, year = as.POSIXlt(date)$year + 1900)
+years <- group_by(chicago, year)
+summarize(years,
+    pm25 = mean(pm25, na.rm = TRUE),
+    o3 = max(o3tmean2, na.rm = TRUE),
+    no2 = median(no2tmean2, na.rm = TRUE)
+)
+```
+
+# %>%
+## The pipeline operator %>% is very handy for stringing together multiple dplyr functions in a sequence of operations
+hard to read: third(second(first(x)))
+```{r pipe}
+chicago %>%
+    mutate(year = as.POSIXlt(date)$year + 1900) %>%
+    group_by(year) %>%
+    summarize(
+        pm25 = mean(pm25, na.rm = TRUE),
+        o3 = max(o3tmean2, na.rm = TRUE),
+        no2 = median(no2tmean2, na.rm = TRUE)
+    )
+
+# another example: by month
+mutate(chicago, month = as.POSIXlt(date)$mon + 1) %>%
+    group_by(month) %>%
+    summarize(
+        pm25 = mean(pm25, na.rm = TRUE),
+        o3 = max(o3tmean2, na.rm = TRUE),
+        no2 = median(no2tmean2, na.rm = TRUE)
+    )
 
 ```
 
+# slice_*()
+ allow you to see a sample of random rows in random order.
+## slice_head() or slice_tail() to take a look at the top rows or bottom rows of your tibble.
+```{r slice_sample}
+slice_sample(chicago, n = 10)
+# show the first 5 rows
+slice_head(chicago, n = 5)
+# show the last 5 rows
+slice_tail(chicago, n = 5)
+```
+
+
+
+
+# Tidy data
+
+```{r tidyr}
+library(tidyr)
+relig_income
+
+library(tidyverse)
+
+# 转换 Pivot data from wide to long
+relig_income %>%
+    pivot_longer(-religion, names_to = "income", values_to = "respondents") %>%
+    mutate(religion = factor(religion), income = factor(income))
+
+```
+
+# A subset of the “Tidyverse” packages include:
+
+ggplot2: a plotting system based on the grammar of graphics
+
+magrittr: defines the %>% operator for chaining functions together in a series of operations on data
+
+dplyr: a suite of (fast) functions for working with data frames
+
+tidyr: easily tidy data with pivot_wider() and pivot_longer() functions (also separate() and unite())
+
+```{r start}
+
+library(dplyr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+```
+
+```{r pivot_longer}
+# install.packages("gapminder")
+library(gapminder)
+gapminder
+
+```
+
+# separate() and unite()
+unite(): combine contents of two or more columns into a single column
+separate(): separate contents of a column into two or more columns
+```{r separate}
+
+gapminder %>%
+    unite(
+        col = "country_continent_year",
+        country:year,
+        sep = "_"
+    )
+
+# separate
+gapminder %>%
+    unite(
+        col = "country_continent_year",
+        country:year,
+        sep = "_"
+    ) %>%
+    separate(
+        col = "country_continent_year",
+        into = c("country", "continent", "year"),
+        sep = "_"
+    )
+```
+
+
+# Joining data in R
+here are three families of verbs designed to work with relational data:
+
+## Mutating joins: A mutating join allows you to combine variables from two tables. 
+## Filtering joins: Filtering joins match observations in the same way as mutating joins, but affect the observations, not the variables (i.e. filter observations from one data frame based on whether or not they match an observation in the other).
+Two types: semi_join(x, y) and anti_join(x, y).
+## Set operations: Treat observations as if they were set elements
+
+
+# mutating join
+left_join() is useful for merging a “large” data frame with a “smaller” one while retaining all the rows of the “large” data frame
+
+inner_join() gives you the intersection of the rows between two data frames
+
+right_join() is like left_join() with the arguments reversed (likely only useful at the end of a pipeline)
+```{r mutating join}
+library(tidyverse)
+
+outcomes <- tibble(
+    id = rep(c("a", "b", "c"), each = 3),
+    visit = rep(0:2, 3),
+    outcome = rnorm(3 * 3, 3)
+)
+
+print(outcomes)
+
+# second table
+subjects <- tibble(
+    id = c("a", "b", "c"),
+    house = c("detached", "rowhouse", "rowhouse")
+)
+
+print(subjects)
+```
+
+
+# left join
+The bottom line for left_join() is that it always retains the values in the “left” argument (in this case the outcomes table).
+
+If there are no corresponding values in the “right” argument, NA values will be filled in.
+```{r left join}
+left_join(x = outcomes, y = subjects, by = "id")
+```
+
+# inner join
+The inner_join() function only retains the rows of both tables that have corresponding values. 
+```{r inner join}
+inner_join(x = outcomes, y = subjects, by = c("id", "visit"))
+```
+
+# right join
+The right_join() function is like the left_join() function except that it gives priority to the “right” hand argument.
+```{r right join}
+right_join(x = outcomes, y = subjects, by = c("id", "visit"))
+```
 
 ```{r end}
 session_info()
