@@ -1,0 +1,189 @@
+---
+title: "Project 1"
+author: "Siyu Zou"
+date: "2023-09-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(here)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+# install.packages("tidytuesdayR")
+
+```
+
+# Part 1
+```{r part 1 data}
+# tuesdata <- tidytuesdayR::tt_load("2022-01-18")
+# chocolate <- tuesdata$chocolate
+
+
+# tests if a directory named "data" exists locally
+if (!dir.exists(here("data"))) {
+    dir.create(here("data"))
+}
+
+# saves data only once (not each time you knit a R Markdown)
+if (!file.exists(here("data", "chocolate.RDS"))) {
+    url_csv <- "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-01-18/chocolate.csv"
+    chocolate <- readr::read_csv(url_csv)
+
+    # save the file to RDS objects
+    saveRDS(chocolate, file = here("data", "chocolate.RDS"))
+}
+
+chocolate <- readRDS(here("data", "chocolate.RDS"))
+as_tibble(chocolate)
+
+glimpse(chocolate)
+```
+
+
+## Q1
+Make a histogram of the rating scores to visualize the overall distribution of scores. 
+```{r part 1 Explore data}
+#hist(chocolate$rating )
+ggplot(chocolate,aes(rating ) ) +
+  geom_histogram()
+
+ggplot(chocolate,aes(rating ) ) +
+  geom_histogram(bins = 10)
+
+ggplot(chocolate,aes(rating ) ) +
+  geom_histogram(bins = 15)
+
+ggplot(chocolate,aes(rating ) ) +
+  geom_histogram(bins = 20)
+
+ggplot(chocolate,aes(rating ) ) +
+  geom_histogram(bins = 25)
+
+```
+I choose to use 15. Because the graph looked more smoother and didn't have too many blank intervals. 
+The default bins is 30. The number of bins (n) means how many groups the data is divided into. If I changed the number of bins, I changed the intervals between different groups. In this question, When I increased the bins number, the bin width decreased and the data was divided into more groups with smaller intervals, made the histogram plot looked more detailed and disperse. When I decreased the bins number, the bin width increased and the data was divided into less groups. The histogram looked smoother. 
+
+## Q2
+Consider the countries where the beans originated from. How many reviews come from each country of bean origin?
+```{r question 2}
+n_reviews <- chocolate %>%
+  group_by(country_of_bean_origin) %>%
+  summarise(
+  number = n()
+  )
+n_reviews
+```
+From above table, we could see the number of reviews come from each country of bean origin.
+
+
+## Q3
+```{r Q3}
+chocolate %>%
+  filter(country_of_bean_origin == "Ecuador") %>%
+  summarise(
+    mean = mean(rating),
+    sd = sd(rating),
+    total = n()
+  )
+
+```
+
+## Q4
+```{r Q4}
+Country_rating <- chocolate %>%
+  filter(country_of_bean_origin == "Ecuador") %>%
+  group_by(company_location ) %>%
+  summarise(
+  mean = mean(rating)
+  )  
+
+Country_rating <- arrange(Country_rating, desc(mean))
+head(Country_rating, n = 1)
+```
+Australia makes the best chocolate with beans from Ecuador.
+
+
+## Q5
+```{r Q5}
+average_rating <- chocolate %>%
+  group_by(country_of_bean_origin) %>%
+  summarise(
+    mean = mean(rating)
+  )
+
+average_rating <- arrange(average_rating, desc(mean))
+head(average_rating, 3)
+```
+The top 3 countries have the highest ratings on average are Tobago, China, and Sao Tome & Principe.
+
+
+## Q6
+```{r Q6}
+review_number_10 <- chocolate %>%
+  group_by(country_of_bean_origin) %>%
+  mutate( 
+    review_number = n()  ) %>%
+  filter( review_number >= 10 ) 
+
+average_rating_10 <- review_number_10 %>%
+  group_by(country_of_bean_origin) %>%
+  summarise(
+    mean = mean(rating)
+  )
+
+average_rating_10 <- arrange(average_rating_10, desc(mean))
+head(average_rating_10, 3)
+```
+The top 3 countries have the highest ratings on average are Solomon Islands, Congo, and Cuba.
+
+
+## Q7
+```{r Q7}
+library(tidyr)
+library(lubridate)
+review_number_50 <- chocolate %>%
+  group_by(country_of_bean_origin) %>%
+  mutate(
+    review_number_50 = n()
+  ) %>%
+  filter(review_number_50 >= 50)
+
+review_number_50 <- review_number_50 %>%
+  mutate(percent = as.numeric(substr(cocoa_percent, 1 , nchar(cocoa_percent) - 1 ))) %>%
+  mutate(
+    chocolate_group = case_when(
+      percent < 60 ~ "<60%",
+      percent < 70 & percent >= 60 ~ ">=60 to 70%",
+      percent < 90 & percent >= 70 ~ ">=70 to 90%",
+      percent >= 90 ~ ">= 90%"
+    )
+  ) 
+```
+
+```{r, include=FALSE}
+fct_relevel( review_number_50$chocolate_group, "<60%", ">=60 to 70%", ">=70 to 90%", ">= 90%"     )
+```
+
+```{r Q7 plot}
+ggplot(review_number_50, aes(chocolate_group, rating )) +
+  geom_boxplot() +
+  labs(title = "Boxplots of Ratings by chocolate percentage, on average") + 
+  scale_x_discrete(labels = c("<60", "60-70", "70-90", ">=90")  )
+
+ggplot(review_number_50, aes(chocolate_group, rating )) +
+  geom_boxplot() +
+  facet_wrap(~country_of_bean_origin, ncol = 4) + 
+  labs(title = "Boxplots of Ratings by chocolate percentage, Faceted by Country") + 
+  scale_x_discrete(labels = c("<60", "60-70", "70-90", ">=90")  )
+```
+
+On average, the (iii) >=70 to <90% category of chocolate percentage is most highly rated. From the graph faceted by country, we could see similar distribution of the rating of the four groups of chocolate percentage, so these countries mostly agree.
+
+
+
+# Part 2
+
+
