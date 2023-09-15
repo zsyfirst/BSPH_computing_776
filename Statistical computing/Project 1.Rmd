@@ -16,7 +16,7 @@ library(ggplot2)
 
 ```
 
-# Part 1
+### Project Data
 ```{r part 1 data}
 # tuesdata <- tidytuesdayR::tt_load("2022-01-18")
 # chocolate <- tuesdata$chocolate
@@ -38,11 +38,10 @@ if (!file.exists(here("data", "chocolate.RDS"))) {
 
 chocolate <- readRDS(here("data", "chocolate.RDS"))
 as_tibble(chocolate)
-
-glimpse(chocolate)
 ```
 
 
+# Part 1
 ## Q1
 Make a histogram of the rating scores to visualize the overall distribution of scores. 
 ```{r part 1 Explore data}
@@ -63,6 +62,7 @@ ggplot(chocolate,aes(rating ) ) +
   geom_histogram(bins = 25)
 
 ```
+
 I choose to use 15. Because the graph looked more smoother and didn't have too many blank intervals. 
 The default bins is 30. The number of bins (n) means how many groups the data is divided into. If I changed the number of bins, I changed the intervals between different groups. In this question, When I increased the bins number, the bin width decreased and the data was divided into more groups with smaller intervals, made the histogram plot looked more detailed and disperse. When I decreased the bins number, the bin width increased and the data was divided into less groups. The histogram looked smoother. 
 
@@ -299,12 +299,12 @@ longdata %>%
   ) +
   theme_bw() + 
   theme(
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 16) ,
-    plot.subtitle = element_text( size = 14) ,
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 14) ,
+    plot.subtitle = element_text( size = 12) ,
     plot.background = element_rect(fill = "white" ),
     strip.background = element_rect(fill = "lightblue" ),
     # panel.spacing = unit(0.2,"in")
-    strip.text = element_text(size = 12) ,
+    strip.text = element_text(size = 11) ,
     axis.title = element_text(size = 12)
   ) 
 ```
@@ -352,9 +352,9 @@ review_number_50 %>%
 * Add the aesthetic size in geom_point, size equal to a variable can make a "bubblechart", the alpha = 0.6 made the point transparent. 
 * Change the facets' title text to violet color with 14 size: strip.text = element_text(color = "violet", size = 14)
 * strip.background = element_rect(fill = "grey20", color = "red", linewidth = 3  ), this code can affect the background of panel strips, made the strips filled with grey20 color, rounded by 3 size red line. 
-* The plot.title element controls the appearance of the plot title, set the font size to 18, with green color and bold face, "hjust = 1" means put the title in the right. 
+* The plot.title element controls the appearance of the plot title, set the font size to 18 which is too large, with green color and bold face, "hjust = 1" means put the title in the right. 
 * Similarly, put the subtitle on the left of the plot,  set the font size to 14, with yellow color, and italic face. Change the color of the plot's background to blue, panel's background color to yellow, legend's background color to violet.
-* Put the legend on the left top and inside the plot, without adjusting the room: legend.position = c(0, 1),
+* Put the legend on the left top and inside, covered the plot: legend.position = c(0, 1),
 * Chnge the major gridlines' color to red.
 * Change the title of axes to green color with font size 14, also change the text of x and y axis to yellow color with font size 14.
 * change the scale of the x axis to ranged from 1990 to 2030, which is larger than the real time range. 
@@ -365,21 +365,47 @@ review_number_50 %>%
 ```{r part 6}
 table(review_number_50$review_date)
 
-
 review_number_50 %>% 
   ggplot(aes( review_date , percent)) + 
-  geom_smooth() + 
-  geom_point( alpha = 2, color = "lightblue") + 
+  geom_point(aes( color = percent), alpha = 2) + 
+  scale_color_gradient(low = "green", high = "red") +
+  geom_smooth( color = "#1380A1", alpha = 0.1 ) + 
   facet_wrap( ~ country_of_bean_origin ) + 
   labs(
     title = "Trends of chocolate's percent by review time, stratified by country",
     subtitle = "Trends: the percentage of chocolate didn't change much over time",
     caption = "Siyu Zou",
-    x = "time(year)",
-    y = "percent"
-  ) +
+    x = "Review time (year)",
+    y = "Percent (%)"
+  ) + 
   coord_cartesian(xlim = c(2007, 2021)) +
-  theme_bw() 
+  #theme_bw() + 
+  theme_minimal() + 
+  theme(
+    text = element_text( family = "sans" ),
+    strip.text = element_text(color = "#1380A1" , size = 12),
+    strip.background = element_rect(fill = "white", color = "white", linewidth = 1  ),
+    
+    plot.title = element_text(hjust = 0.5, color = "black", face = "bold", size = 15) ,
+    plot.subtitle = element_text(hjust = 0.5, color = "black", face = "italic", size = 13) ,
+    plot.background = element_rect(fill = "white" ),
+    
+    panel.grid.major = element_line(color = "white", linewidth = 0.5),
+    panel.grid.minor = element_line(color = "white"),
+    
+    axis.title = element_text(color = "black",size = 13),
+    axis.text = element_text(color = "black", size = 11)
+  ) 
+  
 
 ```
 
+* Add the aesthetic color in geom_point. Then by using scale_color_gradient(), I set color gradient for the "percent" variable, it's better to visualize the percentage values with a color scale from "green" to "red".
+* Stratify the plot by country, using "facet_wrap( ~ country_of_bean_origin )", make the plot more clear and comparable.
+* Change the x axis scale to an appropriate range without delete observations by using coord_cartesian(xlim = c(2007, 2021)).
+* Use theme_minimal() to make a very clean plot, setting the plot theme to a minimalistic style with a white background and no gridlines.
+* Change the plot's font style to "sans".
+* Change the facets' title text to a beautiful blue color with appropriate size: strip.text = element_text(color = "#1380A1" , size = 12)
+* The plot.title element controls the appearance of the plot title, set the font size to 15, with black color and bold face, "hjust = 0.5" means put the title on the middle. 
+* Similarly, put the subtitle on the middle of the plot,  set the font size to 13, with black color, and italic face.
+* Put the legend on the right middle and outside the plot, without adjusting the plot.
