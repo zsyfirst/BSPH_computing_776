@@ -184,6 +184,202 @@ On average, the (iii) >=70 to <90% category of chocolate percentage is most high
 
 
 
-# Part 2
+# Part 2 Join two datasets together
 
+```{r join two datasets}
+library(gapminder)
+
+gapminder_data <- gapminder
+
+# Identify duplicate rows based on the continet column
+duplicates <- duplicated(gapminder_data[, 1]) 
+
+# Create a new data frame without duplicates
+gapminder_no_dup <- gapminder_data[!duplicates, ]
+
+# left_join
+chocolate_new <- chocolate %>%
+  left_join(gapminder_no_dup, by = c("country_of_bean_origin" = "country") ) %>%
+  group_by( country_of_bean_origin ) %>%
+  mutate(
+    review_number_10 = n()
+  ) %>%
+  filter(
+    review_number_10 >= 10
+  ) %>%
+  ungroup() %>%
+  filter(
+    country_of_bean_origin != "Blend"
+  )
+
+chocolate_new %>%
+  ggplot(aes(continent, rating) ) +
+  geom_violin( aes(fill = continent )) +
+  theme_minimal()
+
+```
+
+
+# Project 3 Convert wide data into long data
+# Do we need to delete NAs?
+```{r part3}
+library(tidyr)
+library(stringr)
+
+chocolate_ingredients <- chocolate %>%
+  mutate(
+    beans = ifelse(str_detect(ingredients, "B"), 1, 0),
+    sugar = ifelse(str_detect(ingredients, "S"), 1, 0),
+    cocoa_butter = ifelse(str_detect(ingredients, "C"), 1, 0),
+    vanilla = ifelse(str_detect(ingredients, "V"), 1, 0),
+    letchin = ifelse(str_detect(ingredients, "L"), 1, 0),
+    salt = ifelse(str_detect(ingredients, "Sa"), 1, 0),
+  )  
+
+chocolate_ingredients <- chocolate_ingredients %>%
+  mutate(
+    char_cocoa = ifelse(str_detect(most_memorable_characteristics, "cocoa"), 1, 0),
+    char_sweet = ifelse(str_detect(most_memorable_characteristics, "sweet"), 1, 0),
+    char_nutty = ifelse(str_detect(most_memorable_characteristics, "nutty"), 1, 0),
+    char_creamy = ifelse(str_detect(most_memorable_characteristics, "creamy"), 1, 0),
+    char_roasty = ifelse(str_detect(most_memorable_characteristics, "roasty"), 1, 0),
+    char_earthy = ifelse(str_detect(most_memorable_characteristics, "earthy"), 1, 0),
+  )  
+
+widedata <- chocolate_ingredients %>%
+  group_by(review_date) %>%
+  summarise(
+    mean_score_beans = mean(beans, na.rm = TRUE),
+    mean_score_sugar = mean(sugar, na.rm = TRUE),
+    mean_score_cocoa_butter = mean(cocoa_butter, na.rm = TRUE),
+    mean_score_vanilla = mean(vanilla, na.rm = TRUE),
+    mean_score_letchin = mean(letchin, na.rm = TRUE),
+    mean_score_salt = mean(salt, na.rm = TRUE),
+    mean_score_char_cocoa = mean(char_cocoa, na.rm = TRUE),
+    mean_score_char_sweet = mean(char_sweet, na.rm = TRUE),
+    mean_score_char_nutty = mean(char_nutty, na.rm = TRUE),
+    mean_score_char_creamy = mean(char_creamy, na.rm = TRUE),
+    mean_score_char_roasty = mean(char_roasty, na.rm = TRUE),
+    mean_score_char_earthy = mean(char_earthy, na.rm = TRUE),
+  )
+
+  
+longdata <- widedata %>%
+  pivot_longer(
+    cols = starts_with("mean_score_"),
+    names_to = "feature",
+    names_prefix = "mean_score_",
+    values_to = "mean_score",
+    values_drop_na = FALSE
+  )
+ 
+```
+
+
+# Part 4 Data visualization
+
+```{r data visualization}
+str(longdata)
+table(longdata$feature)
+longdata$feature <-
+  factor(as.character(longdata$feature), levels = c("beans","sugar", "cocoa_butter", "vanilla", "letchin", "salt", "char_cocoa", "char_creamy", "char_earthy", "char_nutty", "char_roasty", "char_sweet" ) )
+
+
+longdata %>%
+  ggplot(aes(review_date, mean_score)) +
+  geom_point(color = "steelblue",  size = 2, alpha = 2 ) +
+  geom_smooth(  linewidth = 1, method = "lm" , color = "darkblue" ) +
+  facet_wrap(vars(feature)) +
+  labs(
+    title = "Mean scores of chocolate's ingredients and the most memorable characteristics over time",
+    subtitle = "Trends: the mean scores of beans, sugar, and salt didn't change over time, ingredients including cocoa butter, vanilla, and letchin decreased over time. \nThe trend of most memorable characteristics didn't change over time",
+    caption = "Siyu Zou",
+    x = "Review year",
+    y = "Mean score"
+  ) +
+  theme_bw() + 
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16) ,
+    plot.subtitle = element_text( size = 14) ,
+    plot.background = element_rect(fill = "white" ),
+    strip.background = element_rect(fill = "lightblue" ),
+    # panel.spacing = unit(0.2,"in")
+    strip.text = element_text(size = 12) ,
+    axis.title = element_text(size = 12)
+  ) 
+```
+
+
+# Part 5: Make the worst plot you can!
+
+```{r part 5}
+str(review_number_50)
+
+review_number_50 %>% 
+  ggplot(aes( review_date , percent)) + 
+  geom_smooth(aes(linewidth = 3)) + 
+  geom_point(aes( size = percent), alpha = 0.6) + 
+  facet_wrap( ~ country_of_bean_origin ) + 
+  labs(
+    title = "Trends of chocolate's percent by review time, stratified by country",
+    subtitle = "Trends: the percentage of chocolate didn't change much over time",
+    caption = "Siyu Zou",
+    x = "time(year)",
+    y = "percent"
+  ) +
+  coord_cartesian(xlim = c(1999, 2030)) +
+  theme(
+    strip.text = element_text(color = "violet", size = 14),
+    strip.background = element_rect(fill = "grey20", color = "red", linewidth = 3  ),
+    
+    plot.title = element_text(hjust = 1, color = "green", face = "bold", size = 18) ,
+    plot.subtitle = element_text(hjust = 0, color = "yellow", face = "italic", size = 14) ,
+    plot.background = element_rect(fill = "blue" ),
+
+    panel.background = element_rect(fill = "yellow"),
+    panel.grid.major = element_line(colour = "red", linewidth = 0.5),
+  
+    legend.background = element_rect( fill = "violet" ),
+    legend.position = c(0, 1),
+  
+    axis.title = element_text(color = "green",size = 14),
+    axis.text = element_text(color = "yellow", size = 14)
+  ) 
+
+
+```
+
+* Add the aesthetic size in geom_point, size equal to a variable can make a "bubblechart", the alpha = 0.6 made the point transparent. 
+* Change the facets' title text to violet color with 14 size: strip.text = element_text(color = "violet", size = 14)
+* strip.background = element_rect(fill = "grey20", color = "red", linewidth = 3  ), this code can affect the background of panel strips, made the strips filled with grey20 color, rounded by 3 size red line. 
+* The plot.title element controls the appearance of the plot title, set the font size to 18, with green color and bold face, "hjust = 1" means put the title in the right. 
+* Similarly, put the subtitle on the left of the plot,  set the font size to 14, with yellow color, and italic face. Change the color of the plot's background to blue, panel's background color to yellow, legend's background color to violet.
+* Put the legend on the left top and inside the plot, without adjusting the room: legend.position = c(0, 1),
+* Chnge the major gridlines' color to red.
+* Change the title of axes to green color with font size 14, also change the text of x and y axis to yellow color with font size 14.
+* change the scale of the x axis to ranged from 1990 to 2030, which is larger than the real time range. 
+
+
+# Part 6: Make a better plot you can!
+
+```{r part 6}
+table(review_number_50$review_date)
+
+
+review_number_50 %>% 
+  ggplot(aes( review_date , percent)) + 
+  geom_smooth() + 
+  geom_point( alpha = 2, color = "lightblue") + 
+  facet_wrap( ~ country_of_bean_origin ) + 
+  labs(
+    title = "Trends of chocolate's percent by review time, stratified by country",
+    subtitle = "Trends: the percentage of chocolate didn't change much over time",
+    caption = "Siyu Zou",
+    x = "time(year)",
+    y = "percent"
+  ) +
+  coord_cartesian(xlim = c(2007, 2021)) +
+  theme_bw() 
+
+```
 
