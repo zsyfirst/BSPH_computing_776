@@ -95,15 +95,15 @@ chocolate %>%
 ```{r Q4}
 Country_rating <- chocolate %>%
   filter(country_of_bean_origin == "Ecuador") %>%
-  group_by(company_location ) %>%
+  group_by(company_manufacturer ) %>%
   summarise(
   mean = mean(rating)
   )  
 
 Country_rating <- arrange(Country_rating, desc(mean))
-head(Country_rating, n = 1)
+head(Country_rating)
 ```
-Australia makes the best chocolate with beans from Ecuador.
+Amano, Benoit Nihant, Beschle (Felchlin), Durci and Smooth Chocolator, The make the best chocolate with beans from Ecuador.
 
 
 ## Q5
@@ -180,8 +180,18 @@ ggplot(review_number_50, aes(chocolate_group, rating )) +
   scale_x_discrete(labels = c("<60", "60-70", "70-90", ">=90")  )
 ```
 
-On average, the (iii) >=70 to <90% category of chocolate percentage is most highly rated. From the graph faceted by country, we could see similar distribution of the rating of the four groups of chocolate percentage, so these countries mostly agree.
+### Q7: On average, which category of chocolate percentage is most highly rated? Do these countries mostly agree or are there disagreements?
+```{r Q7 question}
+review_number_50 %>%
+  group_by(chocolate_group ) %>%
+  summarise(
+    mean = mean(rating),
+    number = n( )
+  )
 
+```
+
+On average, the (ii) >=60 to <70% category of chocolate percentage is most highly rated. From the above table, we could see more countries selected the ">=70 to <90%" group, so most countries didn't agree that the >=60 to 70% groups of chocolate percentage is best.
 
 
 # Part 2 Join two datasets together
@@ -191,7 +201,7 @@ library(gapminder)
 
 gapminder_data <- gapminder
 
-# Identify duplicate rows based on the continet column
+# Identify duplicate rows based on the continent column
 duplicates <- duplicated(gapminder_data[, 1]) 
 
 # Create a new data frame without duplicates
@@ -212,11 +222,39 @@ chocolate_new <- chocolate %>%
     country_of_bean_origin != "Blend"
   )
 
+
+# Identify NAs in the continent column
+Na_country <- chocolate_new$country_of_bean_origin[is.na(chocolate_new$continent)]
+
+table(Na_country)
+table(chocolate_new$continent)
+
+# Replace NAs with continent values
+# Create a mapping between countries and continents using a named vector
+country_to_continent <- c(
+  "Belize" = "Americas",
+  "Congo" = "Africa",
+  "Fiji" = "Oceania",
+  "Grenada" = "Africa",
+  "Papua New Guinea" = "Oceania",
+  "Sao Tome" = "Africa",
+  "Solomon Islands" = "Oceania",
+  "St. Lucia" = "Americas",
+  "Trinidad" = "Americas",
+  "U.S.A." = "Americas",
+  "Vanuatu" = "Oceania"
+)
+
+# replace the NA based on the mapping, retaining original values
+chocolate_new <- chocolate_new %>%
+  mutate(continent = as.character(continent)) %>%
+  mutate(continent = ifelse(country_of_bean_origin %in% names(country_to_continent),                          country_to_continent[country_of_bean_origin],
+                            continent))
+
 chocolate_new %>%
   ggplot(aes(continent, rating) ) +
   geom_violin( aes(fill = continent )) +
   theme_minimal()
-
 ```
 
 
@@ -284,28 +322,23 @@ table(longdata$feature)
 longdata$feature <-
   factor(as.character(longdata$feature), levels = c("beans","sugar", "cocoa_butter", "vanilla", "letchin", "salt", "char_cocoa", "char_creamy", "char_earthy", "char_nutty", "char_roasty", "char_sweet" ) )
 
-
 longdata %>%
-  ggplot(aes(review_date, mean_score)) +
-  geom_point(color = "steelblue",  size = 2, alpha = 2 ) +
-  geom_smooth(  linewidth = 1, method = "lm" , color = "darkblue" ) +
-  facet_wrap(vars(feature)) +
+  ggplot(aes(review_date, mean_score, color = feature)) +
+  geom_point(  size = 2, alpha = 2 ) +
+  geom_smooth(  linewidth = 1,method = 'loess' ) +
   labs(
-    title = "Mean scores of chocolate's ingredients and the most memorable characteristics over time",
-    subtitle = "Trends: the mean scores of beans, sugar, and salt didn't change over time, ingredients including cocoa butter, vanilla, and letchin decreased over time. \nThe trend of most memorable characteristics didn't change over time",
+    title = "Mean scores of ingredients and memorable characteristics over time",
+    subtitle = "Trends: the mean scores of cocoa butter, vanilla, and letchin decreased over time. \nThe trend of most memorable characteristics didn't change too much over time",
     caption = "Siyu Zou",
     x = "Review year",
     y = "Mean score"
   ) +
   theme_bw() + 
   theme(
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 14) ,
-    plot.subtitle = element_text( size = 12) ,
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 13) ,
+    plot.subtitle = element_text(hjust = 0.5, size = 11) ,
     plot.background = element_rect(fill = "white" ),
-    strip.background = element_rect(fill = "lightblue" ),
-    # panel.spacing = unit(0.2,"in")
-    strip.text = element_text(size = 11) ,
-    axis.title = element_text(size = 12)
+    axis.title = element_text(size = 11)
   ) 
 ```
 
