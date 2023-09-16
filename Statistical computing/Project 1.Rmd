@@ -351,7 +351,7 @@ str(review_number_50)
 review_number_50 %>% 
   ggplot(aes( review_date , percent)) + 
   geom_smooth(aes(linewidth = 3)) + 
-  geom_point(aes( size = percent), alpha = 0.6) + 
+  geom_point(aes( size = percent), alpha = 0.6) +  #  make a "bubblechart"
   facet_wrap( ~ country_of_bean_origin ) + 
   labs(
     title = "Trends of chocolate's percent by review time, stratified by country",
@@ -360,23 +360,23 @@ review_number_50 %>%
     x = "time(year)",
     y = "percent"
   ) +
-  coord_cartesian(xlim = c(1999, 2030)) +
+  coord_cartesian(xlim = c(1999, 2030)) +   # change the scale of the x axis to ranged from 1990 to 2030, which is larger than the real time range
   theme(
-    strip.text = element_text(color = "violet", size = 14),
-    strip.background = element_rect(fill = "grey20", color = "red", linewidth = 3  ),
+    strip.text = element_text(color = "violet", size = 14),   # change facets' title text
+    strip.background = element_rect(fill = "grey20", color = "red", linewidth = 3  ),  # affect the background of panel strips
     
-    plot.title = element_text(hjust = 1, color = "green", face = "bold", size = 18) ,
-    plot.subtitle = element_text(hjust = 0, color = "yellow", face = "italic", size = 14) ,
-    plot.background = element_rect(fill = "blue" ),
+    plot.title = element_text(hjust = 1, color = "green", face = "bold", size = 18) ,  # change the plot title's position, color, size
+    plot.subtitle = element_text(hjust = 0, color = "yellow", face = "italic", size = 14) ,  # change subtitle's position, color, size
+    plot.background = element_rect(fill = "blue" ),  # change the plot background's color
 
-    panel.background = element_rect(fill = "yellow"),
-    panel.grid.major = element_line(colour = "red", linewidth = 0.5),
+    panel.background = element_rect(fill = "yellow"),  # change the panel color
+    panel.grid.major = element_line(colour = "red", linewidth = 0.5),  # Change the major gridlines' color to red.
   
-    legend.background = element_rect( fill = "violet" ),
+    legend.background = element_rect( fill = "violet" ),  # Chnge the legend' background color to violet
     legend.position = c(0, 1),
   
-    axis.title = element_text(color = "green",size = 14),
-    axis.text = element_text(color = "yellow", size = 14)
+    axis.title = element_text(color = "green",size = 14),  # change the axis title color and size
+    axis.text = element_text(color = "yellow", size = 14)   # change the axis text color and size
   ) 
 
 
@@ -388,7 +388,7 @@ review_number_50 %>%
 * The plot.title element controls the appearance of the plot title, set the font size to 18 which is too large, with green color and bold face, "hjust = 1" means put the title in the right. 
 * Similarly, put the subtitle on the left of the plot,  set the font size to 14, with yellow color, and italic face. Change the color of the plot's background to blue, panel's background color to yellow, legend's background color to violet.
 * Put the legend on the left top and inside, covered the plot: legend.position = c(0, 1),
-* Chnge the major gridlines' color to red.
+* Change the major gridlines' color to red.
 * Change the title of axes to green color with font size 14, also change the text of x and y axis to yellow color with font size 14.
 * change the scale of the x axis to ranged from 1990 to 2030, which is larger than the real time range. 
 
@@ -401,7 +401,7 @@ table(review_number_50$review_date)
 review_number_50 %>% 
   ggplot(aes( review_date , percent)) + 
   geom_point(aes( color = percent), alpha = 2) + 
-  scale_color_gradient(low = "green", high = "red") +
+  scale_color_gradient(low = "green", high = "red") +  # set color gradient for the "percent" variable, it's better to visualize the percentage values with a color scale from "green" to "red"
   geom_smooth( color = "#1380A1", alpha = 0.1 ) + 
   facet_wrap( ~ country_of_bean_origin ) + 
   labs(
@@ -411,19 +411,18 @@ review_number_50 %>%
     x = "Review time (year)",
     y = "Percent (%)"
   ) + 
-  coord_cartesian(xlim = c(2007, 2021)) +
-  #theme_bw() + 
-  theme_minimal() + 
+  coord_cartesian(xlim = c(2007, 2021)) +  # Change the x axis scale to an appropriate range without delete observations
+  theme_minimal() +   # make a very clean plot, setting the plot theme to a minimalistic style with a white background and no gridlines
   theme(
-    text = element_text( family = "sans" ),
-    strip.text = element_text(color = "#1380A1" , size = 12),
-    strip.background = element_rect(fill = "white", color = "white", linewidth = 1  ),
+    text = element_text( family = "sans" ),  # Change the plot's font style to "sans".
+    strip.text = element_text(color = "#1380A1" , size = 12),  #  Change the facets' title text to a beautiful blue color with appropriate size
+    strip.background = element_rect(fill = "white", color = "white", linewidth = 1  ), 
     
-    plot.title = element_text(hjust = 0.5, color = "black", face = "bold", size = 15) ,
-    plot.subtitle = element_text(hjust = 0.5, color = "black", face = "italic", size = 13) ,
+    plot.title = element_text(hjust = 0.5, color = "black", face = "bold", size = 15) ,  # controls the appearance of the plot title, set the font size to 15, with black color and bold face, "hjust = 0.5" means put the title on the middle
+    plot.subtitle = element_text(hjust = 0.5, color = "black", face = "italic", size = 13) , # put the plot title on the middle
     plot.background = element_rect(fill = "white" ),
     
-    panel.grid.major = element_line(color = "white", linewidth = 0.5),
+    panel.grid.major = element_line(color = "white", linewidth = 0.5), 
     panel.grid.minor = element_line(color = "white"),
     
     axis.title = element_text(color = "black",size = 13),
