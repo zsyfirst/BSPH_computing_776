@@ -1,0 +1,480 @@
+---
+title: "week 5"
+author: "Siyu Zou"
+date: "2023-09-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Control structure
+Commonly used control structures are
+
+if and else: testing a condition and acting on it
+
+for: execute a loop a fixed number of times
+
+while: execute a loop while a condition is true
+
+repeat: execute an infinite loop (must break out of it to stop)
+
+break: break the execution of a loop
+
+next: skip an interation of a loop
+```{r if else}
+x <- runif(n = 1, min = 0, max = 10)
+x
+y <- if (x > 3) {
+    10
+} else {
+    0
+}
+
+y
+
+```
+
+
+# function
+```{r define function}
+my_sum <- function(a, b) {
+    a + b
+}
+
+## Same but with an extra check to make sure that 'a' and 'b'
+## have the same lengths.
+my_sum <- function(a, b) {
+    ## Check that a and b are of the same length
+    stopifnot(length(a) == length(b))
+    a + b
+}
+
+```
+
+# Loop function
+### function loops
+lapply(): Loop over a list and evaluate a function on each element
+
+sapply(): Same as lapply but try to simplify the result
+
+apply(): Apply a function over the margins of an array
+
+tapply(): Apply a function over subsets of a vector
+
+mapply(): Multivariate version of lapply (won’t cover)
+
+An auxiliary function split() is also useful, particularly in conjunction with lapply().
+```{r loop}
+
+
+
+```
+
+### Document your function with roxygen2
+
+```{r roxygen2}
+#' Title
+#'
+#' @param a 
+#' @param b 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+my_sum <- function(a, b) {
+    ## Check that a and b are of the same length
+    stopifnot(length(a) == length(b))
+    a + b
+}
+```
+
+### Test your function with testthat
+Below will use two expect_*() functions from testthat. For more details, check https://r-pkgs.org/testing-basics.html.
+```{r testhat}
+library("testthat")
+test_that("my_sum works", {
+    x <- seq_len(10)
+    expect_equal(my_sum(x, x), x + x)
+
+    expect_error(my_sum(x, seq_len(5)))
+})
+
+```
+
+### Share your function in an R package
+What even more? Make an R package to share this function.
+
+```{r share function}
+install.packages("biocthis")
+## Install biocthis if you don't have it
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("biocthis")
+
+## Create an empty R package that is also an
+## RStudio project
+usethis::create_package("~/Desktop/sum776")
+
+## On the new RStudio window, create the
+## scripts that will guide you into making a package
+biocthis::use_bioc_pkg_templates()
+```
+
+See my example at https://github.com/lcolladotor/sum776 with its documentation website https://lcolladotor.github.io/sum776/. The documentation we wrote for our function is shown at https://lcolladotor.github.io/sum776/reference/my_sum.html.
+
+
+### Build your own R package with your custom-made ggplot2 theme
+
+## Apply your function
+### mapply
+```{r mapply}
+## Check the arguments to mapply()
+args(mapply)
+
+## Apply mapply() to our function my_sum() with the inputs 'x' and 'y'
+mapply(sum776::my_sum, x, y)
+
+
+## Or write an anynymous function that is:
+## * not documented
+## * not tested
+## * not shared
+##
+## :(
+mapply(function(a, b) {
+    a + b
+}, x, y)
+
+```
+
+### purrr alternative
+```{r purrr}
+library("purrr") ## part of tidyverse
+## Check the arguments of map2_int()
+args(purrr::map2_int)
+
+## Apply our function my_sum() to our inputs
+purrr::map2_int(x, y, sum776::my_sum)
+
+## You can also use anonymous functions
+purrr::map2_int(x, y, function(a, b) {a + b})
+
+## purrr even has a super short formula-like syntax
+## where .x is the first input and .y is the second one
+purrr::map2_int(x, y, ~ .x + .y)
+
+## This formula syntax has nothing to do with the objects 'x' and 'y'
+purrr::map2_int(1:2, 3:4, ~ .x + .y)
+```
+
+
+# Base R loops
+## lapply()
+it loops over a list, iterating over each element in that list
+it applies a function to each element of the list (a function that you specify)
+and returns a list (the l in lapply() is for “list”).
+It is important to remember that lapply() always returns a list, regardless of the class of the input.
+```{r lapply}
+lapply
+x <- list(a = 1:5, b = rnorm(10))
+x
+
+lapply(x, mean)
+
+```
+
+Notice that here we are passing the mean() function as an argument to the lapply() function.
+```{r}
+purrr::map_dbl(x, mean)
+```
+What difference do you notice in terms of the output of lapply() and purrr::map_dbl()?
+
+Here is another example of using lapply().
+You can use lapply() to evaluate a function multiple times each with a different argument.
+```{r lapply 2}
+x <- list(a = 1:4, b = rnorm(10), c = rnorm(20, 1), d = rnorm(100, 5))
+lapply(x, mean)
+
+```
+
+Next is an example where I call the runif() function (to generate uniformly distributed random variables) four times, each time generating a different number of random numbers.
+```{r lapply function}
+x <- 1:4
+lapply(x, runif)
+lapply(x, function(a){a = runif()} )
+purrr::map(x, runif)
+```
+
+Functions that you pass to lapply() may have other arguments. For example, the runif() function has a min and max argument too.
+```{r lapply min max}
+x <- 1:4
+lapply(x, runif, min = 0, max = 10)
+#  Again, this also works with purrr functions.
+purrr::map(x, runif, min = 0, max = 10)
+```
+
+The lapply() function (and its friends) makes heavy use of anonymous functions
+Suppose I wanted to extract the first column of each matrix in the list. I could write an anonymous function for extracting the first column of each matrix.
+```{r anonymous}
+x <- list(a = matrix(1:4, 2, 2), b = matrix(1:6, 3, 2))
+x
+lapply(x, function(elt) {
+    elt[, 1]
+})
+
+#  it’s probably a better idea to define the function separately.
+f <- function(elt) {
+    elt[, 1]
+}
+lapply(x, f)
+```
+
+
+## sapply()
+The sapply() function behaves similarly to lapply(); the only real difference is in the return value. sapply() will try to simplify the result of lapply() if possible. Essentially, sapply() calls lapply() on its input and then applies the following algorithm:
+
+If the result is a list where every element is length 1, then a vector is returned
+
+If the result is a list where every element is a vector of the same length (> 1), a matrix is returned.
+
+If it can’t figure things out, a list is returned
+
+This can be a source of many headaches and one of the main motivations behind the purrr package. With purrr you know exactly what type of output you are getting!
+
+```{r}
+x <- list(a = 1:4, b = rnorm(10), c = rnorm(20, 1), d = rnorm(100, 5))
+lapply(x, mean)
+
+# Here’s the result of calling sapply() on the same list.
+sapply(x, mean)
+```
+Because the result of lapply() was a list where each element had length 1, sapply() collapsed the output into a numeric vector, which is often more useful than a list.
+
+With purrr, if I want a list output, I use map(). If I want a double (numeric) output, we can use map_dbl().
+```{r purrr map_dbl}
+purrr::map(x, mean)   # == lapply
+
+purrr::map_dbl(x, mean)  # == sapply
+```
+
+# split()
+The split() function takes a vector or other objects and splits it into groups determined by a factor or list of factors.
+
+The arguments to split() are
+```{r split}
+str(split)
+```
+where
+x is a vector (or list) or data frame
+f is a factor (or coerced to one) or a list of factors
+drop indicates whether empty factors levels should be dropped
+
+```{r split example}
+x <- c(rnorm(10), runif(10), rnorm(10, 1))
+f <- gl(3, 10) # generate factor levels
+f
+split(x, f)
+```
+
+A common idiom is split followed by an lapply.
+```{r split lpply}
+lapply(split(x, f), mean)
+```
+
+## Splitting a Data Frame
+```{r split data frame}
+library("datasets")
+head(airquality)
+
+```
+
+We can split the airquality data frame by the Month variable so that we have separate sub-data frames for each month.
+```{r}
+s <- split(airquality, airquality$Month)
+str(s)
+```
+
+Then we can take the column means for Ozone, Solar.R, and Wind for each sub-data frame.
+```{r}
+lapply(s, function(x) {
+    colMeans(x[, c("Ozone", "Solar.R", "Wind")])
+})
+```
+
+Using sapply() might be better here for a more readable output.
+```{r}
+sapply(s, function(x) {
+    colMeans(x[, c("Ozone", "Solar.R", "Wind")])
+})
+
+```
+
+Unfortunately, there are NAs in the data so we cannot simply take the means of those variables. However, we can tell the colMeans function to remove the NAs before computing the mean.
+```{r remove NA}
+sapply(s, function(x) {
+    colMeans(x[, c("Ozone", "Solar.R", "Wind")],
+        na.rm = TRUE
+    )
+})
+```
+
+We can also do this with purrr as shown below.
+```{r purrr example }
+purrr::map(s, function(x) {
+    colMeans(x[, c("Ozone", "Solar.R", "Wind")], na.rm = TRUE)
+})
+```
+
+The above is not as condensed as the sapply() output. We can use the superseded (aka no longer supported) function map_dfc():
+```{r purrr map_dfc}
+purrr::map_dfc(s, function(x) {
+    colMeans(x[, c("Ozone", "Solar.R", "Wind")], na.rm = TRUE)
+})
+```
+
+Or use the currently supported function purrr::list_cbind(). Though we also need to do a bit more work behind the scenes.
+```{r}
+## Make sure we get data.frame / tibble outputs for each element
+## of the list
+purrr:::map(s, function(x) {
+    tibble::as_tibble(colMeans(x[, c("Ozone", "Solar.R", "Wind")], na.rm = TRUE))
+})
+
+## Now we can combine them with list_cbind()
+purrr:::map(s, function(x) {
+    tibble::as_tibble(colMeans(x[, c("Ozone", "Solar.R", "Wind")], na.rm = TRUE))
+}) %>% 
+  purrr::list_cbind()
+```
+
+
+## tapply
+tapply() is used to apply a function over subsets of a vector. It can be thought of as a combination of split() and sapply() for vectors only. I’ve been told that the “t” in tapply() refers to “table”, but that is unconfirmed.
+```{r tapply}
+str(tapply)
+```
+
+X is a vector
+INDEX is a factor or a list of factors (or else they are coerced to factors)
+FUN is a function to be applied
+… contains other arguments to be passed FUN
+simplify, should we simplify the result?
+
+```{r tpply example}
+## Simulate some data
+x <- c(rnorm(10), runif(10), rnorm(10, 1))
+## Define some groups with a factor variable
+f <- gl(3, 10)
+f
+tapply(x, f, mean)
+```
+
+We can also apply functions that return more than a single value. In this case, tapply() will not simplify the result and will return a list. Here’s an example of finding the range() (min and max) of each sub-group.
+```{r}
+tapply(x, f, range)
+```
+
+With purrr, we don’t have a tapply() direct equivalent but we can still get similar results thanks to the split() function.
+
+```{r}
+split(x, f) %>% 
+  purrr::map_dbl(mean)
+
+split(x, f) %>% 
+  purrr::map(range)
+```
+
+
+## And we can then add the actual variable it came from with mutate()
+```{r}
+purrr:::map(s, function(x) {
+    tibble::as_tibble(colMeans(x[, c("Ozone", "Solar.R", "Wind")], na.rm = TRUE))
+}) %>% purrr::list_cbind() %>% 
+    dplyr::mutate(Variable = c("Ozone", "Solar.R", "Wind"))
+```
+
+## apply()
+The apply() function is used to a evaluate a function (often an anonymous one) over the margins of an array.
+ It is most often used to apply a function to the rows or columns of a matrix (which is just a 2-dimensional array). However, it can be used with general arrays, for example, to take the average of an array of matrices. Using apply() is not really faster than writing a loop, but it works in one line and is highly compact.
+ 
+```{r apply}
+ str(apply)
+```
+ X is an array
+MARGIN is an integer vector indicating which margins should be “retained”.
+FUN is a function to be applied
+... is for other arguments to be passed to FUN
+ 
+```{r apply example}
+ x <- matrix(rnorm(200), 20, 10)
+head(x)
+
+apply(x, 2, mean) ## Take the mean of each column
+
+# I can also compute the sum of each row.
+apply(x, 1, sum) ## Take the mean of each row
+```
+
+## Col/Row Sums and Means
+rowSums = apply(x, 1, sum)
+rowMeans = apply(x, 1, mean)
+colSums = apply(x, 2, sum)
+colMeans = apply(x, 2, mean)
+
+Another nice aspect of these functions is that they are a bit more descriptive. It’s arguably more clear to write colMeans(x) in your code than apply(x, 2, mean).
+
+# Other Ways to Apply
+You can do more than take sums and means with the apply() function.
+ For example, you can compute quantiles of the rows of a matrix using the quantile() function.
+```{r apply quantile}
+x <- matrix(rnorm(200), 20, 10)
+head(x)
+## Get row quantiles
+apply(x, 1, quantile, probs = c(0.25, 0.75))
+
+array_branch(x, 1) %>%
+    map(quantile, probs = c(0.25, 0.75)) %>%
+    map(~ as.data.frame(t(.x))) %>%
+    list_rbind()
+```
+Notice that I had to pass the probs = c(0.25, 0.75) argument to quantile() via the ... argument to apply().
+
+
+# Vectorizing a Functio
+What this means is that we can write function that typically only takes single arguments and create a new function that can take vector arguments.
+
+This is often needed when you want to plot functions.
+Here’s an example of a function that computes the sum of squares given some data, a mean parameter and a standard deviation. The formula is 
+```{r formula}
+sumsq <- function(mu, sigma, x) {
+    sum(((x - mu) / sigma)^2)
+}
+
+x <- rnorm(100) ## Generate some data
+sumsq(mu = 1, sigma = 1, x) ## This works (returns one value)
+```
+However, passing a vector of mus or sigmas won’t work with this function because it’s not vectorized.
+```{r}
+sumsq(1:10, 1:10, x) ## This is not what we want
+```
+There’s even a function in R called Vectorize() that automatically can create a vectorized version of your function.
+
+So we could create a vsumsq() function that is fully vectorized as follows.
+```{r}
+vsumsq <- Vectorize(sumsq, c("mu", "sigma"))
+vsumsq(1:10, 1:10, x)
+
+## The details are a bit complicated though
+## as we can see below
+vsumsq
+```
+
+## Parallelize your functions
+We don’t have time to dive into the details, but with furrr we can parallelize purrr functions thanks to the future package. More details at https://furrr.futureverse.org/.
+
+Similarly, with BiocParallel::bplapply() we can parallelize lapply() commands. Details at https://bioconductor.org/packages/release/bioc/vignettes/BiocParallel/inst/doc/Introduction_To_BiocParallel.html and more generally at https://bioconductor.org/packages/BiocParallel/.
+
