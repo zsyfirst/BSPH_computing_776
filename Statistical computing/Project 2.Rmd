@@ -171,7 +171,7 @@ df_new <- df %>%
 df_new %>%
   ggplot(aes(date, temperature)) +
   geom_line( aes(color = temp_type)) +
-  facet_wrap( ~ city_name) +
+  facet_wrap( ~ city_name, scales = "free") +
   labs(
     title = "Tempature data over time",
     subtitle = "Both of the max and min tempature had fluctuate trends",
@@ -202,16 +202,16 @@ df_new %>%
 To  explore the distribution of rainfall (log scale) with histograms for a given city and a given year, I need to build a function with two arguments "city_name" and "year". First, I need to consider conditions that the user enters an input does not exist in the dataset. I use the !any() in the "if" control structure to test any condition that input city name or input year does not exist in the df dataset, then stop the act and report an error. Then in the next step, I draw a histogram plot based on the ggplot2 package with the x aixs is the log scale of rainfall. I use "labs" to added title, subtitle, and caption for the plot. I also use theme to make the figure look better.
 
 ```{r}
-distribution_city_year <- function(city_name, year) {
-    if (!any(df$city_name == city_name) || !any(df$year == year)) {
+distribution_city_year <- function(city_name2, year2) {
+    if (!any(df$city_name == city_name2) || !any(df$year == year2)) {
       stop("Input city name and year does not exist in the datase")
     }
     df %>%
-    filter(city_name == city_name, year == year) %>%
+    filter(city_name == city_name2, year == year2) %>%
     ggplot(aes(log(rainfall))) +
     geom_histogram( color = "black", fill = "lightblue") + 
     labs(
-        title = paste("Distribution of rainfall for",city_name, "in", year),
+        title = paste("Distribution of rainfall for",city_name2, "in", year2),
         x = "Rainfall (log scale)",
         y = "Frequency",
         caption = "Siyu Zou"
@@ -253,7 +253,7 @@ rain_df
 ```{r part 4b}
 rain_df %>%
   ggplot(aes( year, sample_mean )) +
-  facet_wrap( ~city_name) +
+  facet_wrap( ~city_name, scales = "free") +
   geom_point() +
   geom_line() +
   geom_errorbar(aes(ymin = lower_bound, ymax = upper_bound), width = .2) +
@@ -276,6 +276,7 @@ rain_df %>%
         axis.text = element_text(color = "black", size = 10)
         
   )
+
 ```
 
 
