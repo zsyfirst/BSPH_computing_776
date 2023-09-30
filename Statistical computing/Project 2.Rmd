@@ -1,0 +1,295 @@
+---
+title: "Project 2"
+author: "Siyu Zou"
+date: "2023-09-28"
+output: html_document
+---
+
+```{r setup, message = FALSE, error=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+library(tidyverse)
+library(ggplot2)
+```
+
+# Part 1: Fun with functions
+## Part 1A: Exponential transformation
+
+```{r exponential}
+
+calculate_exp <- function(x, k) {
+  # check if x is a numeric value
+  if ( !is.numeric(x) ){
+    stop("x need to be changed to a single number")
+  } 
+  # check if k is an integer
+  if ( !is.integer(k) ) {
+    stop("k need to be changed to an integer")
+  }
+  exponential_x <- 1
+  while (k >= 1 ) {
+  exponential_x <- exponential_x + x^k/factorial(k) 
+  k = k-1
+  }
+  return(exponential_x)
+}
+
+# Example: 
+x <- 3.3
+k <- as.integer(5)
+
+calculate_exp(x,k)
+```
+
+## Part 1B: sample mean and sample standard deviation
+
+```{r sample}
+sample_mean <- function( x ) {
+  total <- 0
+  n <- length(x)
+  for (i in 1:n ) {
+  total = total + x[i] 
+  }
+  mean = total/n
+  return(mean)
+}
+
+# sample_sd
+sample_sd <- function( x ) {
+  variance <- 0
+  n <- length(x)
+  for (i in 1:n){
+    variance = variance + (x[i] - sample_mean(x))^2
+  }
+  variance <- variance/(n-1)
+  sd <- sqrt(variance)
+  return(sd)
+}
+```
+
+#### example
+```{r}
+x <- c(1,2,3,4,5)
+sample_mean( x )
+sample_sd( x )
+```
+
+## Part 1C: Confidence intervals
+```{r CI}
+
+calculate_CI <- function(x, conf = 0.95) {
+    alpha <- 1 - conf
+    degrees_freedom <- length(x)-1
+    t_score <- qt(p = alpha / 2, df = degrees_freedom, lower.tail = FALSE)
+    lower_bound <- mean(x) - t_score*sd(x)/sqrt(length(x))
+    upper_bound <- mean(x) + t_score*sd(x)/sqrt(length(x))
+    CI <- c("lower_bound" = lower_bound, "upper_bound" = upper_bound)
+    return(CI)
+}
+```
+
+#### Example
+```{r CI example}
+set.seed(20230815)
+x <- rnorm(10, 2, 1)
+ci_95 <- calculate_CI(x, conf = 0.95 )
+print(ci_95)
+ci_90 <- calculate_CI(x, conf = 0.90 )
+print(ci_90)
+
+
+# Check
+dat <- data.frame(x = x)
+fit <- lm(x ~ 1, dat)
+
+# Calculate a 95% confidence interval
+ci_check_95 <- confint(fit, level = 0.95)
+ci_check_95
+ci_check_90 <- confint(fit, level = 0.90)
+ci_check_90
+```
+
+# Part 2: Wrangling data
+```{r}
+if (!file.exists(here("data", "tuesdata_rainfall.RDS"))) {
+    tuesdata <- tidytuesdayR::tt_load("2020-01-07")
+    rainfall <- tuesdata$rainfall
+    temperature <- tuesdata$temperature
+
+    # save the files to RDS objects
+    saveRDS(tuesdata$rainfall, file = here("data", "tuesdata_rainfall.RDS"))
+    saveRDS(tuesdata$temperature, file = here("data", "tuesdata_temperature.RDS"))
+}
+
+# load datasets
+rainfall <- readRDS(here("data", "tuesdata_rainfall.RDS"))
+temperature <- readRDS(here("data", "tuesdata_temperature.RDS"))
+
+glimpse(rainfall)
+glimpse(temperature)
+```
+
+1. Start with rainfall dataset and drop any rows with NAs.
+```{r}
+rainfall_new <- na.omit(rainfall)
+```
+
+2. Create a new column titled date that combines the columns year, month, day into one column separated by “-”. (e.g. “2020-01-01”). This column should not be a character, but should be recognized as a date.
+```{r}
+library(lubridate)
+
+rainfall_new <- rainfall_new %>%
+  mutate(
+    date = ymd(paste(year, month, day, sep = "-")),
+    year_2 = year(date)
+  )
+```
+3. Using the city_name column, convert the city names (character strings) to all upper case.
+```{r}
+rainfall_new <- rainfall_new %>%
+  mutate(
+    city_name = toupper(city_name)
+  )
+```
+
+Join this wrangled rainfall dataset with the temperature dataset such that it includes only observations that are in both data frames
+```{r}
+glimpse(rainfall_new)
+
+df <- rainfall_new %>%
+  inner_join(temperature, by = c("city_name", "date") )
+  
+```
+
+
+# Part 3: Data visualization
+## Part 3A
+```{r part 3A}
+df_new <- df %>%
+  filter( year >= 2014) 
+
+df_new %>%
+  ggplot(aes(date, temperature)) +
+  geom_line( aes(color = temp_type)) +
+  facet_wrap( ~ city_name) +
+  labs(
+    title = "Tempature data over time",
+    subtitle = "Both of the max and min tempature had fluctuate trends",
+    caption = "Siyu Zou",
+    x = "Time (Year)",
+    y = "Temperature (Celsius)"
+  ) +
+  theme_minimal( ) + 
+  theme(
+    strip.text = element_text(color = "#1380A1" , size = 12),  #  Change the facets' title text to a beautiful blue color with appropriate size
+    strip.background = element_rect(fill = "white", color = "white", linewidth = 1  ), 
+    
+    plot.title = element_text(hjust = 0.5, color = "black", face = "bold", size = 15) , 
+    plot.subtitle = element_text(hjust = 0.5, color = "black", face = "italic", size = 13) , # put the plot title on the middle
+    plot.background = element_rect(fill = "white" ),
+    
+    panel.grid.major = element_line(color = "white", linewidth = 0.5), 
+    panel.grid.minor = element_line(color = "white"),
+    
+    axis.title = element_text(color = "black",size = 13),
+    axis.text = element_text(color = "black", size = 11)
+  )
+  
+```
+
+## Part 3B
+1. Write a short description of how you chose to design your function and why.
+To  explore the distribution of rainfall (log scale) with histograms for a given city and a given year, I need to build a function with two arguments "city_name" and "year". First, I need to consider conditions that the user enters an input does not exist in the dataset. I use the !any() in the "if" control structure to test any condition that input city name or input year does not exist in the df dataset, then stop the act and report an error. Then in the next step, I draw a histogram plot based on the ggplot2 package with the x aixs is the log scale of rainfall. I use "labs" to added title, subtitle, and caption for the plot. I also use theme to make the figure look better.
+
+```{r}
+distribution_city_year <- function(city_name, year) {
+    if (!any(df$city_name == city_name) || !any(df$year == year)) {
+      stop("Input city name and year does not exist in the datase")
+    }
+    df %>%
+    filter(city_name == city_name, year == year) %>%
+    ggplot(aes(log(rainfall))) +
+    geom_histogram( color = "black", fill = "lightblue") + 
+    labs(
+        title = paste("Distribution of rainfall for",city_name, "in", year),
+        x = "Rainfall (log scale)",
+        y = "Frequency",
+        caption = "Siyu Zou"
+      ) +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(hjust = 0.5, color = "black", face = "bold", size = 15) 
+      )
+}
+
+# example
+distribution_city_year("PERTH", 2016)
+```
+
+Present the code for your function in the R markdown document.
+
+Include at least one example of output from your function.
+
+
+# Part 4: Apply functions and plot
+## Part 4A: Tasks
+```{r part 4}
+rain_df <- df %>%
+      filter(year >= 2014)  %>%
+      group_by(city_name, year) %>%
+      summarise(
+      sample_mean = sample_mean(rainfall),
+      sample_sd = sample_sd(rainfall),
+      lower_bound = calculate_CI(rainfall , 0.95)[1],
+      upper_bound = calculate_CI(rainfall, 0.95)[2]
+      ) 
+      
+# example
+rain_df
+```
+
+## Part 4B: Tasks
+
+```{r part 4b}
+rain_df %>%
+  ggplot(aes( year, sample_mean )) +
+  facet_wrap( ~city_name) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = lower_bound, ymax = upper_bound), width = .2) +
+  labs(
+    title = "Mean rainfall in different cities from 2014 to 2019",
+    subtitle = "Mean rainfall had a decreacing trend in different country",
+    x = "Time(year)",
+    y = "Mean of rainfall (millimeters)",
+    caption = "Siyu Zou"
+  ) +
+  theme_minimal() +
+  theme(
+        plot.title = element_text(hjust = 0.5, color = "black", face = "bold", size = 15) ,
+        plot.subtitle = element_text(hjust = 0.5, color = "darkblue", face = "bold", size = 12) ,
+        
+        panel.grid.major = element_line(color = "white"),
+        panel.grid.minor = element_line(color = "white"),
+        
+        axis.title = element_text(color = "black",size = 13),
+        axis.text = element_text(color = "black", size = 10)
+        
+  )
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

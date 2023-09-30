@@ -1,5 +1,5 @@
 ---
-title: "week 5"
+title: "week 4 & 5"
 author: "Siyu Zou"
 date: "2023-09-26"
 output: html_document
@@ -35,6 +35,242 @@ y <- if (x > 3) {
 y
 
 ```
+
+### Q1 use if else
+if(<condition1>) {
+        ## do something
+} else if(<condition2>)  {
+        ## do something different
+} else {
+        ## do something different
+}
+
+Let’s use the palmerpenguins dataset and write a if-else statement that
+
+Randomly samples a value from a standard normal distribution (Hint: check out the rnorm(n, mean = 0, sd = 1) function in base R).
+If the value is larger than 0, use dplyr functions to keep only the Chinstrap penguins.
+Otherwise, keep only the Gentoo penguins.
+Re-run the code 10 times and look at output
+```{r exercise 1}
+library(tidyverse)
+library(palmerpenguins)
+library( dplyr )
+penguins_data <- penguins
+
+i <- rnorm(1,0,1) 
+
+penguins_2 <- penguins_data %>%
+  filter(ifelse(i > 0, species == "Chinstrap", species == "Gentoo"))
+
+
+# Set the seed for reproducibility
+set.seed(123)
+
+# Create a loop to run the code 10 times
+for (i in 1:10) {
+  # Randomly sample a value from a standard normal distribution
+  random_value <- rnorm(1, mean = 0, sd = 1)
+  
+  # Use the value to filter the penguins
+  filtered_data <- if (random_value > 0) {
+    penguins_data %>% filter(species == "Chinstrap")
+  } else {
+    penguins_data %>% filter(species == "Gentoo")
+  }
+  
+  # Print the result or perform any other desired operations
+  print(filtered_data)
+}
+```
+
+# for Loops
+```{r for}
+for (i in 1:10) {
+    print(i)
+}
+
+
+## define the loop to iterate over
+x <- c("a", "b", "c", "d")
+
+## create for loop
+for (i in 1:4) {
+    ## Print out each element of 'x'
+    print(x[i])
+}
+```
+
+# seq_along()
+The seq_along() function is commonly used in conjunction with for loops in order to generate an integer sequence based on the length of an object (or ncol() of an R object) (in this case, the object x).
+
+
+The seq_along() function takes in a vector and then returns a sequence of integers that is the same length as the input vector. It doesn’t matter what class the vector is.
+
+Let’s put seq_along() and for loops together.
+```{r seq_along}
+x <- c("a", "b", "c", "d")
+## Generate a sequence based on length of 'x'
+for (i in seq_along(x)) {
+    print(x[i])
+}
+
+# It is not necessary to use an index-type variable (i.e. i).
+for (babyshark in x) {
+    print(babyshark)
+}
+
+# You can use any character index you want (but not with symbols or numbers).
+for (RememberToVote in x) {
+    print(RememberToVote)
+}
+```
+
+For one line loops, the curly braces are not strictly necessary.
+```{r}
+for (i in 1:4) print(x[i])
+```
+
+Let’s use the palmerpenguins dataset. Here are the tasks:
+
+Start a for loop
+Iterate over the columns of penguins
+For each column, extract the values of that column (Hint: check out the pull() function in dplyr).
+Using a if-else statement, test whether or not the values in the column are numeric or not (Hint: remember the is.numeric() function to test if a value is numeric).
+If they are numeric, compute the column mean. Otherwise, report a NA.
+```{r for example}
+
+penguins_data  
+col_mean <- vector("double", length(ncol(penguins_data)))
+for (i in 1:ncol(penguins_data)){
+  col <- pull(penguins_data ,i)  # # Extract the values of the column
+  if ( is.numeric(col) ){
+    col_mean[i] = mean(col, na.rm = TRUE)
+  } else {
+    col_mean[i] = NA
+  }
+  print(mean)
+}
+
+```
+
+# Nested for loops
+for loops can be nested inside of each other.
+```{r}
+x <- matrix(1:6, nrow = 2, ncol = 3)
+x
+for (i in seq_len(nrow(x))) {
+    for (j in seq_len(ncol(x))) {
+        print(x[i, j])
+    }
+}
+```
+Nested loops are commonly needed for multidimensional or hierarchical data structures (e.g. matrices, lists). Be careful with nesting though.
+
+Nesting beyond 2 to 3 levels often makes it difficult to read/understand the code.
+
+If you find yourself in need of a large number of nested loops, you may want to break up the loops by using functions (discussed later).
+
+
+# while loops
+while loops begin by testing a condition.
+
+If it is true, then they execute the loop body.
+
+Once the loop body is executed, the condition is tested again, and so forth, until the condition is false, after which the loop exits.
+```{r while}
+count <- 0
+while (count < 10) {
+    print(count)
+    count <- count + 1
+}
+
+```
+while loops can potentially result in infinite loops if not written properly. Use with care!
+
+Sometimes there will be more than one condition in the test.
+```{r while example}
+z <- 5
+set.seed(1)
+
+while (z >= 3 && z <= 10) {
+    coin <- rbinom(1, 1, 0.5)
+
+    if (coin == 1) { ## random walk
+        z <- z + 1
+    } else {
+        z <- z - 1
+    }
+}
+print(z)
+```
+
+What’s the difference between using one & or two && ?
+
+* If you use only one &, these are vectorized operations, meaning they can return a vector, like this:
+
+-2:2
+((-2:2) >= 0) & ((-2:2) <= 0)
+
+* If you use two && (as above), then these conditions are evaluated left to right. For example, in the above code, if z were less than 3, the second test would not have been evaluated.
+
+(2 >= 0) && (-2 <= 0)
+(-2 >= 0) && (-2 <= 0)
+
+# repeat loops
+repeat initiates an infinite loop right from the start. These are not commonly used in statistical or data analysis applications, but they do have their uses.
+```{r repeat}
+x0 <- 1
+tol <- 1e-8
+
+repeat {
+    x1 <- computeEstimate()
+
+    if (abs(x1 - x0) < tol) { ## Close enough?
+        break
+    } else {
+        x0 <- x1
+    }
+}
+
+```
+
+> The loop above is a bit dangerous because there is no guarantee it will stop.
+You could get in a situation where the values of x0 and x1 oscillate back and forth and never converge.
+Better to set a hard limit on the number of iterations by using a for loop and then report whether convergence was achieved or not.
+
+# next, break
+next is used to skip an iteration of a loop.
+```{r next}
+for (i in 1:100) {
+    if (i <= 20) {
+        ## Skip the first 20 iterations
+        next
+    }
+    ## Do something here
+}
+```
+break is used to exit a loop immediately, regardless of what iteration the loop may be on.
+```{r break}
+for (i in 1:100) {
+    print(i)
+
+    if (i > 20) {
+        ## Stop loop after 20 iterations
+        break
+    }
+}
+```
+
+
+
+
+
+
+
+
+
+
+
 
 
 # function
@@ -477,4 +713,360 @@ vsumsq
 We don’t have time to dive into the details, but with furrr we can parallelize purrr functions thanks to the future package. More details at https://furrr.futureverse.org/.
 
 Similarly, with BiocParallel::bplapply() we can parallelize lapply() commands. Details at https://bioconductor.org/packages/release/bioc/vignettes/BiocParallel/inst/doc/Introduction_To_BiocParallel.html and more generally at https://bioconductor.org/packages/BiocParallel/.
+
+
+# debug
+
+## 3. make it repeatable
+Start by creating a reproducible example (*reprex*).
+```{r reprex}
+library(reprex)
+(y <- 1:4)
+mean(y)
+
+```
+
+## 4. Figure out where it is
+
+## 5. Fix it and test it
+Again, it is very useful to have automated tests in place, which you can implement with *testthat* as showcased in the previous class.
+
+## Somethins is wrong
+* message: A generic notification/diagnostic message produced by the message() function; execution of the function continues
+* warning: An indication that something is wrong but not necessarily fatal; execution of the function continues. Warnings are generated by the warning() function
+* error: An indication that a fatal problem has occurred and execution of the function stops. Errors are produced by the stop() or stopifnot() functions.
+* condition: A generic concept for indicating that something unexpected has occurred; programmers can create their own custom conditions if they want.
+
+```{r}
+print_message <- function(x) {
+    if (x > 0) {
+        print("x is greater than zero")
+    } else {
+        print("x is less than or equal to zero")
+    }
+    invisible(x)
+}
+
+print_message(1)
+print_message(NA)
+```
+What happened?
+
+Well, the first thing the function does is test if x > 0.
+But you can’t do that test if x is a NA or NaN value.
+R doesn’t know what to do in this case so it stops with a fatal error
+
+We can fix this problem by anticipating the possibility of NA values and checking to see if the input is NA with the is.na() function.
+```{R}
+print_message2 <- function(x) {
+    if (is.na(x)) {
+        print("x is a missing value!")
+    } else if (x > 0) {
+        print("x is greater than zero")
+    } else {
+        print("x is less than or equal to zero")
+    }
+    invisible(x)
+}
+
+print_message2(NA)
+```
+
+## Cases with longer inputs than expected
+
+```{r}
+x <- log(c(-1, 2))
+print_message2(x)
+```
+Now what?? Why are we getting this warning?
+
+The warning says “the condition has length > 1 and only the first element will be used”.
+
+The problem here is that I passed print_message2() a vector x that was of length 2 rather then length 1.
+
+Inside the body of print_message2() the expression is.na(x) returns a vector that is tested in the if statement.
+
+However, if cannot take vector arguments, so you get a warning.
+
+The fundamental problem here is that print_message2() is not vectorized.
+
+We can solve this problem two ways.
+
+1. Simply not allow vector arguments.
+2. The other way is to vectorize the print_message2() function to allow it to take vector arguments.
+```{r}
+print_message3 <- function(x) {
+    if (length(x) > 1L) {
+        stop("'x' has length > 1")
+    }
+    if (is.na(x)) {
+        print("x is a missing value!")
+    } else if (x > 0) {
+        print("x is greater than zero")
+    } else {
+        print("x is less than or equal to zero")
+    }
+    invisible(x)
+}
+x <- log(c(-1, 2))
+print_message3(x)
+```
+Now when we pass print_message3() a vector, we should get an error.
+
+
+## Don’t show users the call to help them and you too!
+print_message3(1:2)
+Error in print_message3(1:2): 'x' has length > 1
+
+I have learned that using that setting *call. = FALSE* when using stop() and/or warning() helps your users by providing them less information that could confuse them.
+
+```{r}
+print_message3_no_call <- function(x) {
+    if (length(x) > 1L) {
+        stop("'x' has length > 1", call. = FALSE)
+    }
+    if (is.na(x)) {
+        print("x is a missing value!")
+    } else if (x > 0) {
+        print("x is greater than zero")
+    } else {
+        print("x is less than or equal to zero")
+    }
+    invisible(x)
+}
+
+print_message3_no_call(99:100)
+print_message3(99:100)
+```
+If we compare the error output from print_message3() against print_message3_no_call() we can see that the second scenario doesn’t include information that only we (as the user) have. That’s information that users will copy-paste on their Google searches, which makes finding the right information much harder. As the person trying to help users, knowing how the users called our function is very likely not useful enough information. A reprex is 💯 * ♾️ much better!!!!!
+
+
+## Errors à la tidyverse
+If you want to write error messages similar to those you are used to seeing with tidyverse packages, use rlang. Specifically, switch:
+
+base::stop() with rlang::abort()
+
+base::warning() with rlang::warn()
+
+base::message() with rlang::inform()
+
+```{r rlang}
+print_message3_tidyverse <- function(x) {
+    if (length(x) > 1L) {
+        rlang::abort("'x' has length > 1")
+    }
+    if (is.na(x)) {
+        rlang::warn("x is a missing value!")
+    } else if (x > 0) {
+        rlang::inform("x is greater than zero")
+    } else {
+        rlang::inform("x is less than or equal to zero")
+    }
+    invisible(x)
+}
+print_message3_tidyverse(99:100)
+print_message3_tidyverse(NA)
+print_message3_tidyverse(1)
+print_message3_tidyverse(-1)
+```
+
+Note how rlang by default doesn’t show the function call. The tidyverse style guide has a whole chapter on how to format error messages: https://style.tidyverse.org/error-messages.html. That is how all the R developers in the tidyverse team have been able to provide consistent looking messages to users of all these packages. They also use cli to make their error messages super pretty to read https://rlang.r-lib.org/reference/topic-condition-formatting.html.
+
+In this next example, I:
+
+use cli::cli_abort() instead of rlang::abort()
+
+define len so I can use it in a message with {len}
+
+use {.code something} for inline-markup https://cli.r-lib.org/reference/inline-markup.html
+
+use several of the cli bullets, see https://cli.r-lib.org/reference/cli_bullets.html for the full list
+
+use praise::praise() to get some fun messages to praise our user and lift up their spirits =)
+
+See also praiseMX https://github.com/ComunidadBioInfo/praiseMX which CDSB students built in a course I co-instructed in 2019.
+```{r cli}
+# install.packages("praiseMx")
+print_message3_cli <- function(x) {
+    if (length(x) > 1L) {
+        len <- length(x)
+        
+        ## Avoid the print() calls from
+        ## https://github.com/ComunidadBioInfo/praiseMX/blob/master/R/praise_crear_emi.R
+        praise_mx_log <- capture.output({
+            praise_mx <- praiseMX:::praise_bien()
+        })
+        cli::cli_abort(
+            c(
+                "This function is not vectorized:",
+                "i" = "{.var x} has length {len}.",
+                "x" = "{.var x} must have length 1.",
+                ">" = "Try using {.code purrr::map(x, print_message3_cli)} to loop your input {.var x} on this function.",
+                "v" = praise::praise(),
+                "v" = praise_mx
+            )
+        )
+    }
+    if (is.na(x)) {
+        rlang::warn("x is a missing value!")
+    } else if (x > 0) {
+        rlang::inform("x is greater than zero")
+    } else {
+        rlang::inform("x is less than or equal to zero")
+    }
+    invisible(x)
+}
+
+set.seed(20230928)
+print_message3_cli(-1:1)
+```
+
+# Vectorizing
+Vectorizing the function can be accomplished easily with the Vectorize() function.
+```{r}
+print_message4 <- Vectorize(print_message2)
+out <- print_message4(c(-1, 2))
+```
+
+# Debugging Tools in R
+* traceback(): prints out the function call stack after an error occurs; does nothing if there’s no error
+The tidyverse version of this base R function is rlang::last_error() https://rlang.r-lib.org/reference/last_error.html. For base R, you will need to enable tracing with rlang with rlang::global_entrace() https://rlang.r-lib.org/reference/global_entrace.html. It can provide much more user-friendly output.
+* debug(): flags a function for “debug” mode which allows you to step through execution of a function one line at a time
+* browser(): suspends the execution of a function wherever it is called and puts the function in debug mode
+* trace(): allows you to insert debugging code into a function at specific places
+* recover(): allows you to modify the error behavior so that you can browse the function call stack
+
+```{r tracebck}
+ lm(y ~ x)
+# Error in eval(expr, envir, enclos) : object ’y’ not found
+traceback()
+# 7: eval(expr, envir, enclos)
+# 6: eval(predvars, data, env)
+# 5: model.frame.default(formula = y ~ x, drop.unused.levels = TRUE)
+# 4: model.frame(formula = y ~ x, drop.unused.levels = TRUE)
+# 3: eval(expr, envir, enclos)
+# 2: eval(mf, parent.frame())
+# 1: lm(y ~ x)
+```
+The traceback() function must be called immediately after an error occurs. Once another function is called, you lose the traceback.
+
+You can see now that the error did not get thrown until the 7th level of the function call stack, in which case the eval() function tried to evaluate the formula y ~ x and realized the object y did not exist.
+
+With rlang, this is how it look:
+```{r}
+lm(y ~ x)
+rlang::last_error()
+```
+
+Note that we need to use rlang::global_entrace() first since lm() is a base R function. If we do so, then rlang::last_error() does work.
+```{f}
+rlang::global_entrace()
+lm(y ~ x)
+# Error:
+# ! object 'y' not found
+# Run `rlang::last_trace()` to see where the error occurred.
+rlang::last_error()
+# <error/rlang_error>
+# Error:
+# ! object 'y' not found
+# ---
+# Backtrace:
+#     ▆
+#  1. └─stats::lm(y ~ x)
+#  2.   └─base::eval(mf, parent.frame())
+#  3.     └─base::eval(mf, parent.frame())
+```
+
+
+# Error
+
+Note that using message() is better than print() because users can suppress (censor) the messages if they want to with suppressMessages() as shown below. There’s super easy equivalent for print() as capture.output() is more complicated to use.
+```{r message}
+f <- function() {
+    message("This is a message.")
+}
+
+f()
+
+suppressMessages(f())
+```
+
+## How should errors be handled?
+The tryCatch() function is the workhorse of handling errors and warnings in R. The first argument of this function is any R expression, followed by conditions which specify how to handle an error or a warning. The last argument, finally, specifies a function or expression that will be executed after the expression no matter what, even in the event of an error or a warning.
+```{r tryCatch}
+beera <- function(expr) {
+    tryCatch(expr,
+        error = function(e) {
+            message("An error occurred:\n", e)
+        },
+        warning = function(w) {
+            message("A warning occured:\n", w)
+        },
+        finally = {
+            message("Finally done!")
+        }
+    )
+}
+```
+
+Let's try it
+```{r}
+beera({
+    2 + 2
+})
+
+beera({
+    "two" + 2
+})
+
+beera({
+    as.numeric(c(1, "two", 3))
+})
+```
+Notice that we’ve effectively transformed errors and warnings into messages.
+
+Now that you know the basics of generating and catching errors you’ll need to decide when your program should generate an error. My advice to you is to limit the number of errors your program generates as much as possible. Even if you design your program so that it’s able to catch and handle errors, the error handling process slows down your program by orders of magnitude. Imagine you wanted to write a simple function that checks if an argument is an even number. You might write the following:
+```{r}
+is_even <- function(n) {
+    n %% 2 == 0
+}
+
+is_even(768)
+is_even("two")
+```
+
+You can see that providing a string causes this function to raise an error. You could imagine though that you want to use this function across a list of different data types, and you only want to know which elements of that list are even numbers. You might think to write the following:
+```{r}
+is_even_error <- function(n) {
+    tryCatch(n %% 2 == 0,
+        error = function(e) {
+            FALSE
+        }
+    )
+}
+
+is_even_error(714)
+is_even_error("eight")
+```
+
+
+```{r}
+is_even_check <- function(n) {
+    is.numeric(n) && n %% 2 == 0
+}
+
+is_even_check(1877)
+
+is_even_check("twelve")
+```
+Notice that by using is.numeric() before the “AND” operator (&&), the expression n %% 2 == 0 is never evaluated. This is a programming language design feature called “short circuiting.” The expression can never evaluate to TRUE if the left hand side of && evaluates to FALSE, so the right hand side is ignored.
+
+
+To demonstrate the difference in the speed of the code, we will use the microbenchmark package to measure how long it takes for each function to be applied to the same data.
+```{r}
+# install.packages("microbenchmark")
+library(microbenchmark)
+microbenchmark(sapply(letters, is_even_check))
+microbenchmark(sapply(letters, is_even_error))
+```
 
