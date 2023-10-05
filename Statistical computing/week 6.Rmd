@@ -321,3 +321,262 @@ d1 <- mdy(d1)
 d1
 ```
 
+
+
+#
+# 21-Regular experssion 
+# regex basics
+1. searching for a pattern or string within another string (e.g searching for the string “a” in the string “Maryland”)
+2. replacing one part of a string with another string (e.g replacing the string “t” with “p” in the string “hot” where you are changing the string “hot” to “hop”)
+
+## string basics
+In R, you can create (character) strings with either single quotes ('hello!') or double quotes ("hello!") – no difference (not true for other languages!).
+
+I recommend using the double quotes, 
+```{r}
+string1 <- "This is Siyu's string"
+string2 <- 'If I want to include a "quote" inside a string, I use single quotes'
+```
+
+### grepl()
+One of the most basic functions in R that uses regular expressions is the *grepl(pattern, x)* function, which takes *two arguments* and *returns a logical*:
+
+1. A regular expression (pattern)
+2. A string to be searched (x)
+If the string (x) contains the specified regular expression (pattern), then grepl() will return TRUE,otherwise FALSE
+```{r grepl}
+regular_expression <- "a"
+string_to_search <- "Maryland"
+
+grepl(pattern = regular_expression, x = string_to_search)
+
+grepl("land", "Maryland")
+grepl("Marly", "Maryland")
+```
+#### example
+```{r}
+head(state.name)
+length(state.name)
+```
+#### metacharacters
+The first metacharacter that we will discuss is "."
+
+The metacharacter that only consists of a period represents any character other than a *new line* (we will discuss new lines soon).
+```{r metacharacters}
+grepl(".", "Maryland")
+grepl(".", "*&2[0+,%<@#~|}")
+grepl(".", "")
+```
+As you can see the period metacharacter is very liberal.
+
+This metacharacter is most useful when you *do not care about a set of characters* in a regular expression.
+```{r metacharacters 2}
+grepl("a.b", c("aaa", "aab", "abb", "acadb"))
+```
+In the case above, grepl() returns TRUE for all strings that contain an a followed by any other character followed by a b.
+
+
+## repetition
+You can specify a regular expression that contains a certain number of characters or metacharacters using the enumeration metacharacters (or sometimes called *quantifiers*).
+
+1. +: indicates that one or more of the preceding expression should be present (or matches at least 1 time)
+2. *: indicates that zero or more of the preceding expression is present (or matches at least 0 times)
+3. ?: indicates that zero or 1 of the preceding expression is not present or present at most 1 time (or matches between 0 and 1 times)
+
+### example
+```{r repetition example}
+args(grepl)
+# Does "Maryland" contain one or more of "a" ?
+grepl("a+", "Maryland")
+# Does "Maryland" contain one or more of "x" ?
+grepl("x+", "Maryland")
+# Does "Maryland" contain zero or more of "x" ?
+grepl("x*", "Maryland")  #  TRUE
+grepl("Lx*", "Maryland") # FALSE
+```
+
+If you want to do more than one character, you need to wrap it in ().
+```{r wrap}
+# Does "Maryland" contain zero or more of "x" ?
+grepl("(xx)*", "Maryland")
+grepl("La(la)*", "Maryland")
+
+
+grepl("(zz)+", "spookyhalloween") # Does “zz” appear 1 or more times?
+grepl("(ee)+", "spookyhalloween")
+grepl("ee+", "spookyhalloween")   # I want find the e second times or more
+grepl("(oo)*", "spookyhalloween") # Does “oo” appear 0 or more times?
+grepl("zz+", "zaz")   # FALSE 
+grepl("(zz)+", "zaz")   # FALSE 
+
+```
+
+You can also specify exact numbers of expressions using curly brackets {}.
+{n}: exactly n
+{n,}: n or more
+{,m}: at most m
+{n,m}: between n and m
+For example "a{5}" specifies “a exactly five times”, "a{2,5}" specifies “a between 2 and 5 times,” and "a{2,}" specifies “a at least 2 times.” Let’s take a look at some examples:
+```{r}
+# Does "Mississippi" contain exactly 2 adjacent "s" ?
+grepl("s{2}", "Mississippi")
+# This is equivalent to the expression above:
+grepl("ss", "Mississippi")
+# Does "Mississippi" contain between 1 and 3 adjacent "s" ?
+grepl("s{1,3}", "Mississippi")
+# Does "Mississippi" contain between 2 adjacent "ss" ?
+grepl("(ss){2}", "Mississippi") # FALSE means to find "ssss" 
+grepl("(ss)+", "Mississippi") 
+grepl("i.{2}i.{2}.{2}", "Mississippi") 
+
+# Does "Mississippi" contain between 2 and 4 adjacent "i" ?
+grepl("i{2,4}", "Mississippi")
+# Does "Mississippi" contain between 2 adjacent "iss" ?
+grepl("(iss){2}", "Mississippi")
+
+# Does "Mississippi" contain the pattern of an "i" followed by
+# 2 of any character, with that pattern repeated three times adjacently?
+grepl("(i.{2}){3}", "Mississippi")   
+```
+
+Let’s practice a few out together. Make the following regular expressions for the character string “spookyspookyhalloweenspookyspookyhalloween”:
+
+Search for “spooky” exactly 2 times. What about 3 times?
+Search for “spooky” exactly 2 times followed by any character of length 9 (i.e. “halloween”).
+Same search as above, but search for that twice in a row.
+Same search as above, but search for that three times in a row.
+
+ grepl can't tell us the specific times, it just tell us yes or no
+```{r}
+grepl("(spooky){2}", "spookyspookyhalloweenspookyspookyhalloween")
+grepl("(spooky){2}.{9}", "spookyspookyhalloweenspookyspookyhalloween")
+
+grepl("((spooky){2}.{9}){2}", "spookyspookyhalloweenspookyspookyhalloween")
+grepl("((spooky){2}.{9}){3}", "spookyspookyhalloweenspookyspookyhalloween")
+
+```
+
+
+
+## capture group
+In the examples above, I used parentheses () to create a capturing group. 
+In the “Mississippi” example, I first created the regex "i.{2}" which matches i followed by any two characters (“iss” or “ipp”). Then, I used a capture group to wrap that regex, and to specify exactly three adjacent occurrences of that regex.
+You can specify sets of characters (or character sets or character classes) with regular expressions, some of which come built in, but you can build your own character sets too.
+
+### character sets
+First, we will discuss the built in character sets:
+
+* words ("\\w") = Words specify any letter, digit, or a underscore
+* digits ("\\d") = Digits specify the digits 0 through 9
+* whitespace characters ("\\s") = Whitespace specifies line breaks, tabs, or spaces
+Each of these character sets have their own compliments:
+* not words ("\\W")
+* not digits ("\\D")
+* not whitespace characters ("\\S")
+
+"\n": newline
+"\t": tab,
+```{r}
+"\\d"
+double_quote <- "\""
+double_quote
+single_quote <- "'"
+single_quote
+```
+In fact, putting two backslashes before any punctuation mark that is also a metacharacter indicates that you are looking for the symbol and not the metacharacter meaning.
+
+For example "\\." indicates you are trying to match a period in a string. Let’s take a look at a few examples:
+```{r}
+grepl("\\+", "tragedy + time = humor")
+grepl("\\.", "https://publichealth.jhu.edu")
+```
+
+You will also sometimes see strings like “0b5”, this is a way of writing non-English characters that works on all platforms:
+```{r}
+x <- c("\\t", "\\n", "\u00b5")
+x
+```
+
+## brackets
+You can also specify specific character sets using straight brackets [].
+
+For example a character set of just the vowels would look like: "[aeiou]".
+
+```{r brackets}
+grepl("[aeiou]", "rhythms")
+```
+
+You can find the complement to a specific character by putting a carrot ^ after the first bracket. 
+For example "[^aeiou]" matches all characters except the lowercase vowels.
+
+```{r}
+grepl("[^aeiou]", "rhythms")
+```
+
+## ranges
+You can also specify ranges of characters using a hyphen - inside of the brackets.
+
+For example:
+
+"[a-m]" matches all of the lowercase characters between a and m
+"[5-8]" matches any digit between 5 and 8 inclusive
+```{r}
+grepl("[a-m]", "xyz")  # [1] FALSE
+grepl("[a-m]", "ABC")  # [1] FALSE
+grepl("[a-m]", tolower("ABC"))  # [1] TRUE
+grepl("[a-mA-M]", "ABC")
+```
+## beginning and end
+There are also metacharacters for matching the beginning and the end of a string which are "^" and "$" respectively.
+
+Let’s take a look at a few examples:
+```{r}
+grepl("^a", c("bab", "aab")) # [1] FALSE  TRUE
+grepl("b$", c("bab", "aab", "b")) # [1] TRUE TRUE TRUE
+grepl("^[ab]*$", c("bab", "aab", "abc")) # [1]  TRUE  TRUE FALSE
+
+grepl("[ab]$", c("bab", "aab", "abc")) # [1]  TRUE  TRUE FALSE
+```
+## OR metacharacter
+The last metacharacter we will discuss is the OR metacharacter ("|").
+
+The OR metacharacter matches either the regex on the left or the regex on the right side of this character. A few examples:
+```{r}
+grepl("a|b", c("abc", "bcd", "cde"))
+```
+
+
+
+# Other regex in base R
+First, we will review our workhorse of this lesson, grepl(), which stands for “grep logical.”
+
+grepl("[Ii]", c("Hawaii", "Illinois", "Kentucky"))
+
+## grep()
+Then, there is old fashioned grep(pattern, x), which returns the indices of the vector that match the regex:
+
+grep(pattern = "[Ii]", x = c("Hawaii", "Illinois", "Kentucky"))
+
+
+## sub()
+The sub(pattern, replacement, x) function takes as arguments a regex, a “replacement,” and a vector of strings. This function will replace the first instance of that regex found in each string.
+
+sub(pattern = "[Ii]", replacement = "1", x = c("Hawaii", "Illinois", "Kentucky"))
+
+## gsub()
+The gsub(pattern, replacement, x) function is nearly the same as sub() except it will replace every instance of the regex that is matched in each string.
+
+
+## strsplit()
+The strsplit(x, split) function will split up strings (split) according to the provided regex (x) .
+
+If strsplit() is provided with a vector of strings it will return a list of string vectors.
+```{r}
+two_s <- state.name[grep("ss", state.name)]
+two_s
+strsplit(x = two_s, split = "ss")
+strsplit(x= ("2023-10-05_class.R"), split = "_" )
+```
+
+
+
