@@ -186,15 +186,14 @@ In Part 2, we will explore the lyrics in the b_lyrics and ts_lyrics datasets.
 
 ts_lyrics_new <- unnest_lines( ts_lyrics, output = line ,input = Lyrics )
                   
-
 ts_lyrics_new <- ts_lyrics_new %>%
   mutate (number =  str_count(line, pattern = "hello"))
 
 total_hello <- ts_lyrics_new %>%
-  summarise(
-    n <- sum(number)
-  )
+  filter(number == 1)
+
 total_hello
+nrow(total_hello)
 ```
 6 lines in Taylor Swift's lyrics contain the word "hello"
 ### goodbye lines
@@ -203,10 +202,9 @@ ts_lyrics_new <- ts_lyrics_new %>%
   mutate (number =  str_count(line, pattern = "goodbye"))
 
 total_goodbye <- ts_lyrics_new %>%
-  summarise(
-    n <- sum(number)
-  )
+  filter(number == 1)
 total_goodbye
+nrow(total_goodbye)
 ```
 12 lines in Taylor Swift's lyrics contain the word "goodbye"
 
@@ -319,14 +317,17 @@ ts_lyrics_top %>%
 ```{r}
 ts_lyrics_E <- ts_lyrics %>%
   unnest_tokens(word, Lyrics, token = "words" ) %>%
-  anti_join(stop_words) %>%
+  anti_join(stop_words) 
+
+ts_lyrics_count <- ts_lyrics_E %>%
   group_by(Album) %>%
-  count(word, sort = TRUE) %>%
-  inner_join(get_sentiments("afinn"))  
-  
-average_score <- ts_lyrics_E %>%
-   group_by(Album) %>%
-   summarise(
+  count(word, sort = TRUE)
+
+
+average_score <-  ts_lyrics_E %>%
+  inner_join(get_sentiments("afinn"))  %>%
+  group_by(Album) %>%
+  summarise(
      mean_sentiment_score = mean(value)
    )
 
